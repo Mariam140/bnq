@@ -1,0 +1,366 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <windows.h>
+#include "client.h"
+#include "compte.h"
+#include "client.c"
+#include "compte.c"
+#include "emprunter.c"
+#include "emprunter.h"
+#include "rembourser.h"
+#include "rembourser.c"
+#define ENTETE printf("\t\t\t\t\03  \06  \04  \05  \03  \06  \04  \05  \03  \06  \04  \05  \03  \06  \04\n\t\t\t\t\05   APPLICATION  DE GESTION  DES  BANQUES  \05\n\t\t\t\t\03  \06  \04  \05  \03  \06  \04  \05  \03  \06  \04  \05  \03  \06  \04\n\n\n")
+
+int main()
+{
+
+    Client *nouveauClient = (Client *)malloc(sizeof(Client));
+    free(nouveauClient);
+
+    Compte *nouveauCompte = (Compte *)malloc(sizeof(Compte));
+    free(nouveauCompte);
+
+    Emprunt *nouvel_emprunt = (Emprunt *)malloc(sizeof(Emprunt));
+    free(nouvel_emprunt);
+
+    Remboursement *nouveau_remboursement = (Remboursement *)malloc(sizeof(Remboursement));
+    free(nouveau_remboursement);
+
+    Remboursement *empruntARembourser = (Remboursement *)malloc(sizeof(Remboursement));
+    free(empruntARembourser);
+
+
+
+    ListeClients listeClients;
+    initialiserListeClients(&listeClients);
+    listeClients.debut = NULL;
+
+
+    ListeComptes listeComptes;
+    initialiserListeComptes(&listeComptes);
+    listeComptes.debut = NULL;
+
+    ListeEmprunts listeEmprunts;
+    initialiserListeEmprunts(&listeEmprunts);
+    listeEmprunts.debut = NULL;
+
+
+    ListeRemboursements listeRemboursements;
+    initialiserListeRemboursements(&listeRemboursements);
+    listeRemboursements.debut = NULL;
+
+    charger_client_depuis_fichier(&listeClients, "clients.txt");
+    charger_compte_depuis_fichier(&listeComptes, "compte.txt");
+   /* charger_emprunt_depuis_fichier(&listeEmprunts, "emprunt.txt");
+    charger_remboursement_depuis_fichier(&listeRemboursements, "remboursement.txt");*/
+
+
+
+
+    int choix;
+    long numeroRecherche;
+    long numeroModification;
+    long numeroEmprunt;
+    double montantRemboursement;
+    long numeroClient;
+    long typeEmprunt;
+    int EN_COURS;
+
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    SetConsoleTextAttribute(hConsole, 15);
+    ENTETE;
+
+    do{
+        SetConsoleTextAttribute(hConsole, 6);
+        printf("\04 Menu principal \04\n");
+        SetConsoleTextAttribute(hConsole, 12);
+        printf("\03 1. Enregistrer un nouveau client \03\n");
+        SetConsoleTextAttribute(hConsole, 8);
+        printf("\05 2. Rechercher un client par numero \05\n");
+        SetConsoleTextAttribute(hConsole, 12);
+        printf("\03 3. Enregistrer un nouveau compte \03\n");
+        SetConsoleTextAttribute(hConsole, 8);
+        printf("\05 4. Debloquer un compte \05\n");
+        SetConsoleTextAttribute(hConsole, 12);
+        printf("\03 5. Modifier les informations d'un client \03\n");
+        SetConsoleTextAttribute(hConsole, 8);
+        printf("\05 6. Solliciter un emprunt \05\n");
+        SetConsoleTextAttribute(hConsole, 12);
+        printf("\03 7. Afficher les emprunts \03\n");
+        SetConsoleTextAttribute(hConsole, 8);
+        printf("\05 8. Effectuer un remboursement \05\n");
+        SetConsoleTextAttribute(hConsole, 12);
+        printf("\03 9. Afficher les remboursements \03\n");
+        SetConsoleTextAttribute(hConsole, 8);
+        printf("\05 0. Quitter \05\n");
+
+
+        printf("Choix : ");
+        scanf("%d", &choix);
+
+        system("cls");
+        SetConsoleTextAttribute(hConsole, 15);
+        ENTETE;
+        switch (choix){
+            case 1:{
+                Client nouveauClient;
+
+                SetConsoleTextAttribute(hConsole, 6);
+                printf("\03 Enregistrer un nouveau client \03\n\n");
+
+                SetConsoleTextAttribute(hConsole, 15);
+
+                printf("Entrez le numero du client : ");
+                scanf("%ld", &nouveauClient.numero);
+
+                printf("Entrez le nom du client : ");
+                scanf("%s", &nouveauClient.nom);
+
+                printf("Entrez le prenom du client : ");
+                scanf("%s", &nouveauClient.prenom);
+
+                printf("Entrez le genre du client (M/F) : ");
+                scanf(" %c", &nouveauClient.genre);
+                do
+                {
+                    printf("Entrer sa date de naissance: ");
+                    scanf("%d %d %d", &nouveauClient.date_naissance.jj, &nouveauClient.date_naissance.mm, &nouveauClient.date_naissance.aaaa);
+                    if(!validateDate(nouveauClient.date_naissance))
+                        printf("Date invalide\n");
+                }while (!validateDate(nouveauClient.date_naissance));
+
+                printf("Entrez le lieu de naissance du client : ");
+                scanf("%s", &nouveauClient.lieu_naissance);
+
+                printf("Entrez la profession du client : ");
+                scanf("%s", &nouveauClient.profession);
+
+                afficher_client(nouveauClient);
+                enregistrer_client(&listeClients, &nouveauClient);
+                afficher_client(nouveauClient);
+                enregistrer_client_dans_fichier(&nouveauClient);
+
+                scanf("%d", &choix);
+                system("cls");
+                SetConsoleTextAttribute(hConsole, 15);
+                ENTETE;
+                printf("Client enregistre avec succes.\n\n");
+            }
+                break;
+            case 2:
+                SetConsoleTextAttribute(hConsole, 6);
+                printf("\05 Rechercher un client par numero \05\n\n");
+
+                SetConsoleTextAttribute(hConsole, 15);
+                printf("Entrez le numero du client a rechercher : ");
+                scanf("%ld", &numeroRecherche);
+                Client *clientTrouve = rechercher_client(&listeClients, numeroRecherche);
+                if (clientTrouve != NULL)
+                {
+                    printf("Client trouve :\n");
+                    printf("Numeros : %ld Nom : %s Prenom : %s Genre : %c  date de naissance : %d %d %d lieu de naissance : %s profession : %s \n",
+                           clientTrouve->numero,
+                           clientTrouve->nom,
+                           clientTrouve->prenom,
+                           clientTrouve->genre,
+                           clientTrouve->date_naissance.aaaa,
+                           clientTrouve->date_naissance.mm,
+                           clientTrouve->date_naissance.jj,
+                           clientTrouve->lieu_naissance,
+                           clientTrouve->profession);
+                }
+                else
+                {
+                    system("cls");
+                    SetConsoleTextAttribute(hConsole, 15);
+                    ENTETE;
+                    printf("Aucun client trouve avec le numero %ld\n", numeroRecherche);
+                }
+                break;
+                system("cls");
+                SetConsoleTextAttribute(hConsole, 15);
+                ENTETE;
+            case 3:{
+                Compte nouveauCompte;
+                SetConsoleTextAttribute(hConsole, 6);
+                printf("\03 Enregistrer un nouveau compte \03\n\n");
+
+                SetConsoleTextAttribute(hConsole, 15);
+                printf("Entrez le num�ro du compte : ");
+                scanf("%ld", &nouveauCompte.numero);
+
+                printf("Entrez le type du compte (0 pour EPARGNE, 1 pour COURANT) : ");
+                scanf("%d", (int*)&nouveauCompte.type);
+
+                printf("Entrez le num�ro du client associ� au compte : ");
+                scanf("%ld", &nouveauCompte.numero_client);
+
+                printf("Entrez le solde initial du compte : ");
+                scanf("%f", &nouveauCompte.solde);
+
+                printf("Entrez l'�tat du compte (0 pour LIBRE, 1 pour BLOQUE) : ");
+                scanf("%d", &nouveauCompte.etat);
+
+                afficher_compte(nouveauCompte);
+                enregistrer_compte(&listeComptes, &nouveauCompte);
+                afficher_compte(nouveauCompte);
+
+                enregistrer_compte_dans_fichier(&nouveauCompte);
+
+
+                system("cls");
+
+                SetConsoleTextAttribute(hConsole, 15);
+                ENTETE;
+                printf("Compte enregistre avec succes.\n");
+            }
+                break;
+            case 4:
+                SetConsoleTextAttribute(hConsole, 6);
+                printf("\05 Debloquer un compte \05\n\n");
+
+                SetConsoleTextAttribute(hConsole, 15);
+                long numeroDeblocage;
+                printf("Entrez le numero du compte � debloquer/bloquer : ");
+                scanf("%ld", &numeroDeblocage);
+
+                debloquer_compte(&listeComptes, numeroDeblocage);
+                system("cls");
+                ENTETE;
+                printf("Operation effectuee avec succes.\n");
+                break;
+            case 5:
+                SetConsoleTextAttribute(hConsole, 6);
+                printf("\03 Modifier les informations d'un client \03\n\n");
+
+                SetConsoleTextAttribute(hConsole, 15);
+                printf("Entrez le numero du client a modifier : ");
+                scanf("%ld", &numeroModification);
+                system("cls");
+                SetConsoleTextAttribute(hConsole, 15);
+                ENTETE;
+                modifier_client(&listeClients, numeroModification);
+                break;
+            case 6:{
+
+                Client *clientEmprunt;
+                printf("Entrez le numero du client : ");
+                scanf("%ld", &numeroClient);
+                charger_client_depuis_fichier(&listeClients, "clients.txt") ;
+
+                if (clientEmprunt != NULL)
+                {
+                    //afficher_emprunts(clientEmprunt);
+
+                    Emprunt nouvelEmprunt;
+                    nouvelEmprunt.numero_client = clientEmprunt->numero;
+
+                    printf("Type d'emprunt (0: Pret scolaire, 1: Pret investissement, 2: Pret immobilier) : ");
+                    scanf("%ld", &nouvelEmprunt.type);
+
+                    printf("Raison de l'emprunt : ");
+                    scanf("%s", nouvelEmprunt.raison);
+
+                    printf("Montant de l'emprunt : ");
+                    scanf("%lf", &nouvelEmprunt.montant);
+
+                    printf("Date limite de remboursement (JJ/MM/AAAA) : ");
+                    scanf("%s", nouvelEmprunt.date_limite);
+
+                    printf("Date du premier remboursement (JJ/MM/AAAA) : ");
+                    scanf("%s", nouvelEmprunt.date_premier_remboursement);
+
+                    solliciter_emprunt(&listeEmprunts, &nouvelEmprunt);
+                   // enregistrer_emprunt(&nouvel_emprunt);
+
+                    system("cls");
+
+                    SetConsoleTextAttribute(hConsole, 15);
+                    ENTETE;
+
+                    printf("Emprunt sollicite avec succes.\n");
+                }else{
+                    system("cls");
+                    SetConsoleTextAttribute(hConsole, 15);
+                    ENTETE;
+                    printf("Aucun client trouve avec le numero %ld\n", numeroClient);
+                }
+
+                }
+                break;
+
+            case 7:{
+                SetConsoleTextAttribute(hConsole, 6);
+                printf("\03 Afficher les emprunts \03\n\n");
+
+                SetConsoleTextAttribute(hConsole, 15);
+                printf("Entrez le numero du client : ");
+                scanf("%ld", &numeroClient);
+
+
+
+                Client *clientEmprunt = rechercher_client(&listeClients, numeroClient);
+
+                system("cls");
+                SetConsoleTextAttribute(hConsole, 15);
+                ENTETE;
+                printf("Emprunt sollicite avec succes.\n");
+            }
+                break;
+
+            case 8:
+                SetConsoleTextAttribute(hConsole, 6);
+                printf("\05 Effectuer un remboursement \05\n\n");
+
+                SetConsoleTextAttribute(hConsole, 15);
+                printf("Entrez le numero de l'emprunt a rembourser : ");
+                scanf("%ld", &numeroEmprunt);
+
+                Emprunt *empruntARembourser = rechercher_emprunt(&listeEmprunts, numeroEmprunt);
+
+                if (empruntARembourser != NULL)
+                {
+                    if (empruntARembourser->statut == EN_COURS)
+                    {
+                        system("cls");
+                        SetConsoleTextAttribute(hConsole, 15);
+                        ENTETE;
+                        printf("Entrez le montant du remboursement : ");
+                        scanf("%lf", &montantRemboursement);
+
+                        /* enregistrer_remboursement(&nouveau_remboursement, &empruntARembourser);
+
+                       effectuer_remboursement_dans_fichier(&nouvel_remboursement, &empruntArembouser);*/
+
+                    }
+                    else
+                    {
+                        printf("Cet emprunt n'est plus en cours.\n");
+                    }
+                }
+                else
+                {
+                    system("cls");
+                    SetConsoleTextAttribute(hConsole, 15);
+                    ENTETE;
+                    printf("Aucun emprunt trouv� avec le num�ro %ld\n", numeroEmprunt);
+                }
+                break;
+
+            case 9:
+                system("cls");
+                SetConsoleTextAttribute(hConsole, 6);
+                printf("\03 Afficher les remboursements \03\n\n");
+                SetConsoleTextAttribute(hConsole, 15);
+                afficher_remboursements(&listeRemboursements);
+                break;
+
+            case 0:
+                SetConsoleTextAttribute(hConsole, 3);
+                printf("Programme termin�.\02\n");
+                SetConsoleTextAttribute(hConsole, 15);
+                break;
+        }
+    } while (choix != 0);
+    return 0;
+}
